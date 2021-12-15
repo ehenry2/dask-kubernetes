@@ -105,8 +105,11 @@ class Pod(ProcessInterface):
 
     async def logs(self):
         try:
+            # Hack. to allow use of sidecars/multiple containers, we arbitrarily presume
+            # that the first container in the pod is the one hosting the dask scheduler/worker.
+            container_name = self.pod_template.spec.containers[0].name
             log = await self.core_api.read_namespaced_pod_log(
-                self._pod.metadata.name, self.namespace
+                self._pod.metadata.name, self.namespace, container=container_name
             )
         except ApiException as e:
             if "waiting to start" in str(e):
